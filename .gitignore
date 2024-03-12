@@ -433,3 +433,4 @@ FodyWeavers.xsd
 # Extra
 *.vcxproj
 *.vcxproj.filters
+*.sln
