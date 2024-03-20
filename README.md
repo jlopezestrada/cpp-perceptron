@@ -2,7 +2,7 @@
 ![GitHub issues](https://img.shields.io/github/issues/jlopezestrada/cpp-perceptron)
 
 # C++ Perceptron
-C++ Perceptron (cpp-perceptron) is an implementation of a Perceptron using C++. The Perceptron is a type of artificial neuron that is commonly used for classification and regression tasks.
+C++ Perceptron (*cpp-perceptron*) is an implementation of a Perceptron using C++. The Perceptron is a type of artificial neuron that is commonly used for classification and regression tasks.
 
 ## Perceptron
 The perceptron was one of the earliest types of artificial neural networks and was developed in the 1950s. It can be used for binary classification tasks where the input data is linearly separable. With the advent of more advanced neural network architectures, the perceptron has been largely superseded, but it remains an important building block in neural network development.
