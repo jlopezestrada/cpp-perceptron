@@ -1,9 +1,10 @@
 #include <iostream>
 #include <vector>
+#include "Perceptron.cpp"
 
 int main() {
 	// Initializate Perceptron class
-	// Perceptron perceptron(); TODO
+	Perceptron perceptron();
 
 	// Inputs
 	std::vector<std::vector<double>> inputs = {
