@@ -4,7 +4,7 @@
 #include <vector>
 class Perceptron {
 private:
-	int n_features;
+	int n_features = 0;
 	std::vector<double> weights;
 public:
 	explicit Perceptron(int n_features);

@@ -1,20 +1,15 @@
 #include <iostream>
 #include <vector>
+#include "../include/Perceptron.h"
 
-class Perceptron {
-private:
-	int n_features;
-	std::vector<double> weights;
-public:
-	Perceptron(int n_features) {
-		this->n_features = n_features;
-	}
+Perceptron::Perceptron(int n_features) : n_features(n_features), weights(weights) {
 
-	void train() {
-		std::cout << "Training... ";
-	}
+}
 
-	double predict() {
-		std::cout << "Predict... ";
-	}
-};
+void Perceptron::train() {
+
+}
+
+double Perceptron::predict() {
+	return 0.0;
+}
