@@ -32,7 +32,7 @@ void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<dou
 
 double Perceptron::predict() {
     // TODO
-	return 0.0;
+    return 0.0;
 }
 
 int Perceptron::activationFunction(double weightSum) const {
