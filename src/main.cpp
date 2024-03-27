@@ -3,7 +3,7 @@
 #include "../include/Perceptron.h"
 
 int main() {
-	Perceptron perceptron(2);
+	Perceptron perceptron(2, 0.001);
 
 	// Inputs
 	std::vector<std::vector<double>> inputs = {

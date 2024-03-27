@@ -2,7 +2,7 @@
 #include <vector>
 #include "../include/Perceptron.h"
 
-Perceptron::Perceptron(int n_features) : n_features(n_features), weights(n_features, 0) {
+Perceptron::Perceptron(int n_features, double learningRate) : n_features(n_features), learningRate(learningRate), weights(n_features, 0.0) {
 }
 
 void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<double>& labels, int epochs) {
@@ -16,11 +16,18 @@ void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<dou
 
             int predicted = activationFunction(weightedSum);
             int error = labels[i] - predicted;
+            std::cout << "\t\t\tERROR: " << error << std::endl;
 
-            // TODO: update weights logic
+            if (error != 0) {
+                std::cout << "\t\t\tUPDATE WEIGHTS" << std::endl;
+                for (size_t j = 0; j < weights.size(); j++) {
+                    weights[j] += learningRate * error * inputs[i][j];
+                }
+                bias += learningRate * error;
+            }
 
             std::cout << "\tInstance " << i << ": Prediction = " << predicted << ", Actual = " << labels[i];
-            if (error == 0) {
+            if (error == 0.0) {
                 std::cout << " -> OK" << std::endl;
             }
             else {
@@ -36,5 +43,5 @@ double Perceptron::predict() {
 }
 
 int Perceptron::activationFunction(double weightSum) const {
-    return weightSum > 0 ? 1 : 0;
+    return weightSum > 0.0 ? 1 : 0;
 }
