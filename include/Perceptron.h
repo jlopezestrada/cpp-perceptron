@@ -13,7 +13,7 @@ private:
 public:
 	explicit Perceptron(int n_features, double learningRate);
 	void train(std::vector<std::vector<double>>& inputs, std::vector<double>& labels, int epochs);
-	double predict(std::vector<std::vector<double>> input);
+	double predict(std::vector<double> input);
 };
 
 #endif

@@ -35,12 +35,10 @@ void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<dou
     }
 }
 
-double Perceptron::predict(std::vector<std::vector<double>> input) {
+double Perceptron::predict(std::vector<double> input) {
     double weightedSum = bias;
-    for (size_t i = 0; i < input.size(); i++) {
-        for (int j = 0; j < n_features; j++) {
-            weightedSum += weights[j] * input[i][j];
-        }
+    for (int i = 0; i < n_features; i++) {
+        weightedSum += weights[i] * input[i];
     }
     return activationFunction(weightedSum);
 }
