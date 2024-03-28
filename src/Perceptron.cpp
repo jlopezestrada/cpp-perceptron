@@ -46,3 +46,11 @@ double Perceptron::predict(std::vector<double> input) {
 double Perceptron::activationFunction(double weightSum) const {
     return weightSum > 0.0 ? 1.0 : 0.0;
 }
+
+std::vector<double> Perceptron::getWeights() {
+    return weights;
+}
+
+double Perceptron::getBias() {
+    return bias;
+}
