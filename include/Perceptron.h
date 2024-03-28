@@ -8,12 +8,12 @@ private:
 	double bias = 0.0;
 	double learningRate = 0.0;
 	std::vector<double> weights;
-	int activationFunction(double weightSum) const;
-
+	double activationFunction(double weightSum) const;
+		
 public:
 	explicit Perceptron(int n_features, double learningRate);
 	void train(std::vector<std::vector<double>>& inputs, std::vector<double>& labels, int epochs);
-	double predict();
+	double predict(std::vector<std::vector<double>> input);
 };
 
 #endif

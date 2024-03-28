@@ -13,14 +13,19 @@ int main() {
 		{1, 1}
 	};
 	
-	// Labels
+	// Labels AND
 	std::vector<double> labels = { 0, 0, 0, 1 };
 
 	// Train
 	perceptron.train(inputs, labels, 10);
 
 	// Prediction
-	// TODO
+	std::vector<std::vector<double>> userInput(1);
+	userInput[0].resize(2);
+	std::cout << "Enter your values (x y): ";
+	std::cin >> userInput[0][0] >> userInput[0][1];
+
+	std::cout << "Prediction of [" << userInput[0][0] << " " << userInput[0][1] << "]: " << perceptron.predict(userInput) << std::endl;
 
 	return 0;
 }
