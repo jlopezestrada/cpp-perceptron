@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <iomanip>
+#include <sstream>
 #include "../include/Perceptron.h"
 
 Perceptron::Perceptron(int n_features, double learningRate) : n_features(n_features), learningRate(learningRate), weights(n_features, 0.0) {
@@ -7,7 +9,16 @@ Perceptron::Perceptron(int n_features, double learningRate) : n_features(n_featu
 
 void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<double>& labels, int epochs) {
     for (int epoch = 0; epoch < epochs; epoch++) {
-        std::cout << "Epoch: " << epoch << std::endl;
+        // Reset formatting flags at the start of each epoch
+        std::cout.unsetf(std::ios_base::floatfield);
+        
+        std::cout << "\n\033[1;36mEpoch " << std::setw(2) << (epoch + 1) << "/" << epochs << "\033[0m" << std::endl;
+        std::cout << "--------------------------------------------------" << std::endl;
+        std::cout << " Input      | Prediction | Target | Status" << std::endl;
+        std::cout << "--------------------------------------------------" << std::endl;
+
+        int correctCount = 0;
+
         for (size_t i = 0; i < inputs.size(); i++) {
             double weightedSum = bias;
             for (int j = 0; j < n_features; j++) {
@@ -22,16 +33,38 @@ void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<dou
                     weights[j] += learningRate * error * inputs[i][j];
                 }
                 bias += learningRate * error;
+            } else {
+                correctCount++;
             }
 
-            std::cout << "\tInstance " << i << ": Prediction = " << predicted << ", Actual = " << labels[i];
+            // Format Input String
+            std::stringstream ss;
+            ss << "[";
+            for(size_t j=0; j < inputs[i].size(); j++) {
+                ss << inputs[i][j] << (j < inputs[i].size()-1 ? ", " : "");
+            }
+            ss << "]";
+
+            // Print Row with fixed widths
+            std::cout << " " << std::left << std::setw(11) << ss.str() << "| ";
+            
+            // Prediction Column
+            std::cout << "    " << predicted << "      | "; 
+            
+            // Target Column
+            std::cout << "   " << (int)labels[i] << "    | ";
+
             if (error == 0.0) {
-                std::cout << " -> OK" << std::endl;
+                std::cout << "\033[32m[OK]\033[0m" << std::endl;
             }
             else {
-                std::cout << " -> Error" << std::endl;
+                std::cout << "\033[31m[FAIL]\033[0m" << std::endl;
             }
         }
+        
+        double accuracy = (double)correctCount / inputs.size() * 100.0;
+        std::cout << "--------------------------------------------------" << std::endl;
+        std::cout << " Accuracy: " << std::fixed << std::setprecision(1) << accuracy << "%" << std::endl;
     }
 }
 
