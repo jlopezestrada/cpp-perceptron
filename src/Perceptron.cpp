@@ -1,78 +1,69 @@
-#include <iostream>
-#include <vector>
-#include <iomanip>
-#include <sstream>
-#include "../include/Perceptron.h"
+#include "Perceptron.h"
 
-Perceptron::Perceptron(int n_features, double learningRate) : n_features(n_features), learningRate(learningRate), weights(n_features, 0.0) {
+#include <cmath>
+#include <stdexcept>
+#include <vector>
+
+Perceptron::Perceptron(std::size_t n_features, double learningRate)
+    : n_features(n_features), learningRate(learningRate), weights(n_features, 0.0) {
+    if (n_features == 0) {
+        throw std::invalid_argument("n_features must be greater than zero");
+    }
+
+    if (!std::isfinite(learningRate) || learningRate <= 0.0) {
+        throw std::invalid_argument("learningRate must be a positive finite value");
+    }
 }
 
-void Perceptron::train(std::vector<std::vector<double>>& inputs, std::vector<double>& labels, int epochs) {
+void Perceptron::train(const std::vector<std::vector<double>>& inputs, const std::vector<double>& labels, int epochs) {
+    if (inputs.empty()) {
+        throw std::invalid_argument("inputs cannot be empty");
+    }
+
+    if (inputs.size() != labels.size()) {
+        throw std::invalid_argument("inputs and labels must contain the same number of samples");
+    }
+
+    if (epochs <= 0) {
+        throw std::invalid_argument("epochs must be greater than zero");
+    }
+
+    for (std::size_t i = 0; i < inputs.size(); i++) {
+        validateInput(inputs[i]);
+
+        if (labels[i] != 0.0 && labels[i] != 1.0) {
+            throw std::invalid_argument("labels must be either 0.0 or 1.0");
+        }
+    }
+
     for (int epoch = 0; epoch < epochs; epoch++) {
-        // Reset formatting flags at the start of each epoch
-        std::cout.unsetf(std::ios_base::floatfield);
-        
-        std::cout << "\n\033[1;36mEpoch " << std::setw(2) << (epoch + 1) << "/" << epochs << "\033[0m" << std::endl;
-        std::cout << "--------------------------------------------------" << std::endl;
-        std::cout << " Input      | Prediction | Target | Status" << std::endl;
-        std::cout << "--------------------------------------------------" << std::endl;
-
-        int correctCount = 0;
-
-        for (size_t i = 0; i < inputs.size(); i++) {
+        for (std::size_t i = 0; i < inputs.size(); i++) {
             double weightedSum = bias;
-            for (int j = 0; j < n_features; j++) {
+            for (std::size_t j = 0; j < n_features; j++) {
                 weightedSum += weights[j] * inputs[i][j];
             }
 
-            int predicted = activationFunction(weightedSum);
-            int error = labels[i] - predicted;
+            double predicted = activationFunction(weightedSum);
+            double error = labels[i] - predicted;
 
             if (error != 0) {
-                for (size_t j = 0; j < weights.size(); j++) {
+                for (std::size_t j = 0; j < weights.size(); j++) {
                     weights[j] += learningRate * error * inputs[i][j];
                 }
                 bias += learningRate * error;
-            } else {
-                correctCount++;
-            }
-
-            // Format Input String
-            std::stringstream ss;
-            ss << "[";
-            for(size_t j=0; j < inputs[i].size(); j++) {
-                ss << inputs[i][j] << (j < inputs[i].size()-1 ? ", " : "");
-            }
-            ss << "]";
-
-            // Print Row with fixed widths
-            std::cout << " " << std::left << std::setw(11) << ss.str() << "| ";
-            
-            // Prediction Column
-            std::cout << "    " << predicted << "      | "; 
-            
-            // Target Column
-            std::cout << "   " << (int)labels[i] << "    | ";
-
-            if (error == 0.0) {
-                std::cout << "\033[32m[OK]\033[0m" << std::endl;
-            }
-            else {
-                std::cout << "\033[31m[FAIL]\033[0m" << std::endl;
             }
         }
-        
-        double accuracy = (double)correctCount / inputs.size() * 100.0;
-        std::cout << "--------------------------------------------------" << std::endl;
-        std::cout << " Accuracy: " << std::fixed << std::setprecision(1) << accuracy << "%" << std::endl;
     }
 }
 
-double Perceptron::predict(std::vector<double> input) {
+double Perceptron::predict(const std::vector<double>& input) const {
+    validateInput(input);
+
     double weightedSum = bias;
-    for (int i = 0; i < n_features; i++) {
+    for (std::size_t i = 0; i < n_features; i++) {
         weightedSum += weights[i] * input[i];
     }
+
     return activationFunction(weightedSum);
 }
 
@@ -80,10 +71,22 @@ double Perceptron::activationFunction(double weightSum) const {
     return weightSum > 0.0 ? 1.0 : 0.0;
 }
 
-std::vector<double> Perceptron::getWeights() {
+void Perceptron::validateInput(const std::vector<double>& input) const {
+    if (input.size() != n_features) {
+        throw std::invalid_argument("input size must match n_features");
+    }
+
+    for (double value : input) {
+        if (!std::isfinite(value)) {
+            throw std::invalid_argument("input values must be finite");
+        }
+    }
+}
+
+const std::vector<double>& Perceptron::getWeights() const {
     return weights;
 }
 
-double Perceptron::getBias() {
+double Perceptron::getBias() const {
     return bias;
 }
