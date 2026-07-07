@@ -55,17 +55,64 @@ void expectInvalidArgument(Function function, const std::string& message) {
     throw std::runtime_error(message + ": expected std::invalid_argument");
 }
 
-void learnsAndGate() {
+const std::vector<std::vector<double>>& binaryLogicInputs() {
+    static const std::vector<std::vector<double>> inputs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+    return inputs;
+}
+
+void expectLearnsLogicGate(const std::string& name, const std::vector<double>& labels) {
     Perceptron perceptron(2, 0.001);
-    const std::vector<std::vector<double>> inputs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-    const std::vector<double> labels = {0, 0, 0, 1};
+    const std::vector<std::vector<double>>& inputs = binaryLogicInputs();
 
-    perceptron.train(inputs, labels, 10);
+    perceptron.train(inputs, labels, 25);
 
-    expect(perceptron.predict({0, 0}) == 0.0, "AND: 0 && 0 should be 0");
-    expect(perceptron.predict({0, 1}) == 0.0, "AND: 0 && 1 should be 0");
-    expect(perceptron.predict({1, 0}) == 0.0, "AND: 1 && 0 should be 0");
-    expect(perceptron.predict({1, 1}) == 1.0, "AND: 1 && 1 should be 1");
+    for (std::size_t i = 0; i < inputs.size(); i++) {
+        expect(perceptron.predict(inputs[i]) == labels[i], name + ": prediction should match target label");
+    }
+}
+
+struct Point {
+    double x = 0.0;
+    double y = 0.0;
+};
+
+double crossProduct(const Point& origin, const Point& first, const Point& second) {
+    return (first.x - origin.x) * (second.y - origin.y) -
+           (first.y - origin.y) * (second.x - origin.x);
+}
+
+bool hasOppositeOrientationOrTouches(double first, double second) {
+    return (first <= 0.0 && second >= 0.0) || (first >= 0.0 && second <= 0.0);
+}
+
+bool lineSegmentsIntersect(const Point& firstStart,
+                           const Point& firstEnd,
+                           const Point& secondStart,
+                           const Point& secondEnd) {
+    const double firstSide = crossProduct(firstStart, firstEnd, secondStart);
+    const double secondSide = crossProduct(firstStart, firstEnd, secondEnd);
+    const double thirdSide = crossProduct(secondStart, secondEnd, firstStart);
+    const double fourthSide = crossProduct(secondStart, secondEnd, firstEnd);
+
+    return hasOppositeOrientationOrTouches(firstSide, secondSide) &&
+           hasOppositeOrientationOrTouches(thirdSide, fourthSide);
+}
+
+void learnsLinearlySeparableLogicGates() {
+    expectLearnsLogicGate("AND", {0, 0, 0, 1});
+    expectLearnsLogicGate("OR", {0, 1, 1, 1});
+    expectLearnsLogicGate("NAND", {1, 1, 1, 0});
+    expectLearnsLogicGate("NOR", {1, 0, 0, 0});
+}
+
+void xorClassesAreNotLinearlySeparable() {
+    const Point positiveA{0.0, 1.0};
+    const Point positiveB{1.0, 0.0};
+    const Point negativeA{0.0, 0.0};
+    const Point negativeB{1.0, 1.0};
+
+    expect(lineSegmentsIntersect(positiveA, positiveB, negativeA, negativeB),
+           "XOR positive and negative convex hulls intersect, so one line cannot separate them");
 }
 
 void rejectsInvalidConstructorArguments() {
@@ -242,7 +289,8 @@ void rejectsUntrainedFlatDecisionBoundary() {
 
 int main() {
     try {
-        learnsAndGate();
+        learnsLinearlySeparableLogicGates();
+        xorClassesAreNotLinearlySeparable();
         rejectsInvalidConstructorArguments();
         rejectsInvalidTrainingData();
         rejectsInvalidPredictionInput();
