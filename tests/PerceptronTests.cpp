@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -94,6 +95,80 @@ void rendersDecisionBoundaryPlot() {
     expect(plot.find("Legend: . class 0, + class 1, # boundary, 0/1 samples") != std::string::npos,
            "plot should include legend");
 }
+
+void rejectsNonTwoFeaturePerceptronForVisualization() {
+    Perceptron perceptron(3, 0.001);
+    DecisionBoundaryVisualizer visualizer;
+    std::ostringstream output;
+
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0, 0}}, {0}, output); },
+                          "reject non-2D perceptron visualization");
+}
+
+void rejectsInvalidVisualizationOptions() {
+    Perceptron perceptron(2, 0.001);
+    std::ostringstream output;
+
+    DecisionBoundaryOptions reversedBounds;
+    reversedBounds.xMin = 1.0;
+    reversedBounds.xMax = 0.0;
+    expectInvalidArgument([&] {
+        DecisionBoundaryVisualizer visualizer(reversedBounds);
+        visualizer.render(perceptron, {{0, 0}}, {0}, output);
+    }, "reject reversed x bounds");
+
+    DecisionBoundaryOptions nonFiniteBounds;
+    nonFiniteBounds.yMax = std::numeric_limits<double>::infinity();
+    expectInvalidArgument([&] {
+        DecisionBoundaryVisualizer visualizer(nonFiniteBounds);
+        visualizer.render(perceptron, {{0, 0}}, {0}, output);
+    }, "reject non-finite bounds");
+
+    DecisionBoundaryOptions narrowGrid;
+    narrowGrid.width = 1;
+    expectInvalidArgument([&] {
+        DecisionBoundaryVisualizer visualizer(narrowGrid);
+        visualizer.render(perceptron, {{0, 0}}, {0}, output);
+    }, "reject grid width less than 2");
+
+    DecisionBoundaryOptions shortGrid;
+    shortGrid.height = 1;
+    expectInvalidArgument([&] {
+        DecisionBoundaryVisualizer visualizer(shortGrid);
+        visualizer.render(perceptron, {{0, 0}}, {0}, output);
+    }, "reject grid height less than 2");
+}
+
+void rejectsInvalidVisualizationSamples() {
+    Perceptron perceptron(2, 0.001);
+    const std::vector<std::vector<double>> inputs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+    const std::vector<double> labels = {0, 0, 0, 1};
+    perceptron.train(inputs, labels, 10);
+
+    DecisionBoundaryVisualizer visualizer;
+    std::ostringstream output;
+
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0, 0}}, {0, 1}, output); },
+                          "reject mismatched visualization labels");
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0}}, {0}, output); },
+                          "reject one-dimensional visualization sample");
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0, 0, 0}}, {0}, output); },
+                          "reject three-dimensional visualization sample");
+    expectInvalidArgument([&] {
+        visualizer.render(perceptron, {{std::numeric_limits<double>::quiet_NaN(), 0}}, {0}, output);
+    }, "reject non-finite visualization sample");
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0, 0}}, {2}, output); },
+                          "reject non-binary visualization label");
+}
+
+void rejectsUntrainedFlatDecisionBoundary() {
+    Perceptron perceptron(2, 0.001);
+    DecisionBoundaryVisualizer visualizer;
+    std::ostringstream output;
+
+    expectInvalidArgument([&] { visualizer.render(perceptron, {{0, 0}}, {0}, output); },
+                          "reject zero learned feature weights");
+}
 }
 
 int main() {
@@ -103,6 +178,10 @@ int main() {
         rejectsInvalidTrainingData();
         rejectsInvalidPredictionInput();
         rendersDecisionBoundaryPlot();
+        rejectsNonTwoFeaturePerceptronForVisualization();
+        rejectsInvalidVisualizationOptions();
+        rejectsInvalidVisualizationSamples();
+        rejectsUntrainedFlatDecisionBoundary();
     } catch (const std::exception& exception) {
         std::cerr << "Test failed: " << exception.what() << '\n';
         return 1;
