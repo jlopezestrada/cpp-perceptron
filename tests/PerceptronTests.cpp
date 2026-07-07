@@ -1,7 +1,9 @@
 #include "Perceptron.h"
+#include "DecisionBoundaryVisualizer.h"
 
 #include <exception>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -63,6 +65,35 @@ void rejectsInvalidPredictionInput() {
     expectInvalidArgument([&] { perceptron.predict({1}); }, "reject short prediction input");
     expectInvalidArgument([&] { perceptron.predict({1, 0, 1}); }, "reject long prediction input");
 }
+
+void rendersDecisionBoundaryPlot() {
+    Perceptron perceptron(2, 0.001);
+    const std::vector<std::vector<double>> inputs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+    const std::vector<double> labels = {0, 0, 0, 1};
+
+    perceptron.train(inputs, labels, 10);
+
+    DecisionBoundaryOptions options;
+    options.xMin = -0.25;
+    options.xMax = 1.25;
+    options.yMin = -0.25;
+    options.yMax = 1.25;
+    options.width = 11;
+    options.height = 7;
+
+    DecisionBoundaryVisualizer visualizer(options);
+    std::ostringstream output;
+    visualizer.render(perceptron, inputs, labels, output);
+
+    const std::string plot = output.str();
+    expect(plot.find('.') != std::string::npos, "plot should include class 0 region markers");
+    expect(plot.find('+') != std::string::npos, "plot should include class 1 region markers");
+    expect(plot.find('#') != std::string::npos, "plot should include boundary markers");
+    expect(plot.find('0') != std::string::npos, "plot should include class 0 sample markers");
+    expect(plot.find('1') != std::string::npos, "plot should include class 1 sample markers");
+    expect(plot.find("Legend: . class 0, + class 1, # boundary, 0/1 samples") != std::string::npos,
+           "plot should include legend");
+}
 }
 
 int main() {
@@ -71,6 +102,7 @@ int main() {
         rejectsInvalidConstructorArguments();
         rejectsInvalidTrainingData();
         rejectsInvalidPredictionInput();
+        rendersDecisionBoundaryPlot();
     } catch (const std::exception& exception) {
         std::cerr << "Test failed: " << exception.what() << '\n';
         return 1;

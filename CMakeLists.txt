@@ -14,7 +14,7 @@ function(enable_project_warnings target)
     endif()
 endfunction()
 
-add_library(perceptron src/Perceptron.cpp)
+add_library(perceptron src/Perceptron.cpp src/DecisionBoundaryVisualizer.cpp)
 target_include_directories(perceptron PUBLIC include)
 enable_project_warnings(perceptron)
 
