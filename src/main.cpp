@@ -1,3 +1,4 @@
+#include "DecisionBoundaryVisualizer.h"
 #include "Perceptron.h"
 
 #include <exception>
@@ -30,6 +31,10 @@ int main() {
             std::cout << "[" << inputs[i][0] << ", " << inputs[i][1] << "] -> "
                       << perceptron.predict(inputs[i]) << " (target " << labels[i] << ")" << std::endl;
         }
+
+        std::cout << "\nDecision boundary:" << std::endl;
+        DecisionBoundaryVisualizer visualizer;
+        visualizer.render(perceptron, inputs, labels, std::cout);
 
         std::vector<double> userInput(2);
         std::cout << "\nTest the model:" << std::endl;
