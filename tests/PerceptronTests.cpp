@@ -16,6 +16,32 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::vector<std::string> plotRowsBeforeLegend(const std::string& plot) {
+    std::vector<std::string> rows;
+    std::istringstream stream(plot);
+    std::string line;
+
+    while (std::getline(stream, line)) {
+        if (line.find("Legend:") == 0) {
+            break;
+        }
+
+        rows.push_back(line);
+    }
+
+    return rows;
+}
+
+bool rowsContain(const std::vector<std::string>& rows, char marker) {
+    for (const std::string& row : rows) {
+        if (row.find(marker) != std::string::npos) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 template <typename Function>
 void expectInvalidArgument(Function function, const std::string& message) {
     try {
@@ -87,13 +113,56 @@ void rendersDecisionBoundaryPlot() {
     visualizer.render(perceptron, inputs, labels, output);
 
     const std::string plot = output.str();
-    expect(plot.find('.') != std::string::npos, "plot should include class 0 region markers");
-    expect(plot.find('+') != std::string::npos, "plot should include class 1 region markers");
-    expect(plot.find('#') != std::string::npos, "plot should include boundary markers");
-    expect(plot.find('0') != std::string::npos, "plot should include class 0 sample markers");
-    expect(plot.find('1') != std::string::npos, "plot should include class 1 sample markers");
+    const std::vector<std::string> plotRows = plotRowsBeforeLegend(plot);
+    expect(rowsContain(plotRows, '.'), "plot rows should include class 0 region markers");
+    expect(rowsContain(plotRows, '+'), "plot rows should include class 1 region markers");
+    expect(rowsContain(plotRows, '#'), "plot rows should include boundary markers");
+    expect(rowsContain(plotRows, '0'), "plot rows should include class 0 sample markers");
+    expect(rowsContain(plotRows, '1'), "plot rows should include class 1 sample markers");
     expect(plot.find("Legend: . class 0, + class 1, # boundary, 0/1 samples") != std::string::npos,
            "plot should include legend");
+}
+
+void placesSamplesOnNearestGridCell() {
+    Perceptron perceptron(2, 0.001);
+    perceptron.train({{0, 0}, {1, 1}}, {0, 1}, 10);
+
+    DecisionBoundaryOptions options;
+    options.xMin = 0.0;
+    options.xMax = 1.0;
+    options.yMin = 0.0;
+    options.yMax = 1.0;
+    options.width = 3;
+    options.height = 3;
+
+    DecisionBoundaryVisualizer visualizer(options);
+    std::ostringstream output;
+    visualizer.render(perceptron, {{0.49, 0.49}}, {1}, output);
+
+    const std::vector<std::string> plotRows = plotRowsBeforeLegend(output.str());
+    expect(plotRows.size() == 3, "nearest-cell plot should have three rows");
+    expect(plotRows[1].size() == 3, "nearest-cell plot row should have three columns");
+    expect(plotRows[1][1] == '1', "in-bounds sample should be placed on nearest grid cell");
+}
+
+void skipsSamplesOutsideVisualizationBounds() {
+    Perceptron perceptron(2, 0.001);
+    perceptron.train({{0, 0}, {1, 1}}, {0, 1}, 10);
+
+    DecisionBoundaryOptions options;
+    options.xMin = 0.0;
+    options.xMax = 1.0;
+    options.yMin = 0.0;
+    options.yMax = 1.0;
+    options.width = 3;
+    options.height = 3;
+
+    DecisionBoundaryVisualizer visualizer(options);
+    std::ostringstream output;
+    visualizer.render(perceptron, {{1.5, 0.5}}, {0}, output);
+
+    const std::vector<std::string> plotRows = plotRowsBeforeLegend(output.str());
+    expect(!rowsContain(plotRows, '0'), "out-of-bounds samples should be skipped");
 }
 
 void rejectsNonTwoFeaturePerceptronForVisualization() {
@@ -178,6 +247,8 @@ int main() {
         rejectsInvalidTrainingData();
         rejectsInvalidPredictionInput();
         rendersDecisionBoundaryPlot();
+        placesSamplesOnNearestGridCell();
+        skipsSamplesOutsideVisualizationBounds();
         rejectsNonTwoFeaturePerceptronForVisualization();
         rejectsInvalidVisualizationOptions();
         rejectsInvalidVisualizationSamples();
