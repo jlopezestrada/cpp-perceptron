@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <exception>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -11,12 +12,63 @@ namespace {
 constexpr double kLearningRate = 0.001;
 constexpr int kTrainingEpochs = 25;
 
+enum class DemoMode {
+    Default,
+    AllGraphs,
+    Help
+};
+
 struct LogicGate {
     std::string name;
     std::vector<double> labels;
     bool linearlySeparable = true;
     std::string note;
 };
+
+std::string programName(int argc, char* argv[]) {
+    if (argc > 0 && argv[0] != nullptr) {
+        return argv[0];
+    }
+
+    return "cpp-perceptron";
+}
+
+void printUsage(const std::string& executable, std::ostream& output) {
+    output << "Usage: " << executable << " [--graphs|--help]\n\n";
+    output << "Options:\n";
+    output << "  --graphs  Show decision-boundary graphs for AND, OR, NAND, and NOR.\n";
+    output << "  --help    Show this help message.\n";
+}
+
+bool parseArguments(int argc, char* argv[], DemoMode& mode, std::ostream& errorOutput) {
+    mode = DemoMode::Default;
+    const std::string executable = programName(argc, argv);
+
+    if (argc == 1) {
+        return true;
+    }
+
+    if (argc == 2) {
+        const std::string argument = argv[1];
+        if (argument == "--graphs") {
+            mode = DemoMode::AllGraphs;
+            return true;
+        }
+
+        if (argument == "--help") {
+            mode = DemoMode::Help;
+            return true;
+        }
+
+        errorOutput << "Unknown option: " << argument << "\n\n";
+        printUsage(executable, errorOutput);
+        return false;
+    }
+
+    errorOutput << "Invalid argument count.\n\n";
+    printUsage(executable, errorOutput);
+    return false;
+}
 
 const std::vector<std::vector<double>>& binaryInputs() {
     static const std::vector<std::vector<double>> inputs = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
@@ -91,18 +143,32 @@ void explainNonLinearlySeparableGate(const LogicGate& gate) {
 }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
+        DemoMode mode = DemoMode::Default;
+        const std::string executable = programName(argc, argv);
+
+        if (!parseArguments(argc, argv, mode, std::cerr)) {
+            return 1;
+        }
+
+        if (mode == DemoMode::Help) {
+            printUsage(executable, std::cout);
+            return 0;
+        }
+
         std::cout << "\n========================================\n";
         std::cout << "   C++ Perceptron - Logic Gate Demo\n";
         std::cout << "========================================\n";
 
         const std::vector<LogicGate> gates = logicGates();
+        const bool renderAllGraphs = mode == DemoMode::AllGraphs;
         bool boundaryRendered = false;
 
         for (const LogicGate& gate : gates) {
             if (gate.linearlySeparable) {
-                demonstrateLearnableGate(gate, !boundaryRendered);
+                const bool showDecisionBoundary = renderAllGraphs || !boundaryRendered;
+                demonstrateLearnableGate(gate, showDecisionBoundary);
                 boundaryRendered = true;
             } else {
                 explainNonLinearlySeparableGate(gate);
