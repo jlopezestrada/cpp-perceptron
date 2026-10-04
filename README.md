@@ -1,5 +1,6 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/jlopezestrada/cpp-perceptron)
 ![GitHub issues](https://img.shields.io/github/issues/jlopezestrada/cpp-perceptron)
+[![CI](https://github.com/jlopezestrada/cpp-perceptron/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/jlopezestrada/cpp-perceptron/actions/workflows/ci.yml)
 
 # C++ Perceptron
 C++ Perceptron (*cpp-perceptron*) is a small educational implementation of a binary perceptron in C++. The included demo trains models for linearly separable logic gates (`AND`, `OR`, `NAND`, and `NOR`) and explains why `XOR` cannot be learned by a single perceptron.
